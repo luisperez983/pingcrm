@@ -10,16 +10,18 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
 class UsersController extends Controller
 {
     public function index()
     {
         return Inertia::render('Users/Index', [
-            'filters' => Request::all('search', 'role', 'trashed'),
+            'filters' => Request::all('search', 'owner','role', 'trashed'),
             'users' => Auth::user()->account->users()
                 ->orderByName()
-                ->filter(Request::only('search', 'role', 'trashed'))
+                ->filter(Request::only('search', 'owner','role', 'trashed'))
                 ->get()
                 ->transform(fn ($user) => [
                     'id' => $user->id,
@@ -28,13 +30,21 @@ class UsersController extends Controller
                     'owner' => $user->owner,
                     'photo' => $user->photo_path ? URL::route('image', ['path' => $user->photo_path, 'w' => 40, 'h' => 40, 'fit' => 'crop']) : null,
                     'deleted_at' => $user->deleted_at,
-                ]),
+                    'role'=>$user->getRoleNames(),
+                ]),                
+                'roles'=>Role::orderBy('name')
+                    ->get()
+                    ->map->only('id','name'),
         ]);
     }
 
     public function create()
     {
-        return Inertia::render('Users/Create');
+        return Inertia::render('Users/Create',[
+            'roles'=>Role::orderBy('name')
+            ->get()
+            ->map->only('id','name'),
+        ]);
     }
 
     public function store()
@@ -46,9 +56,10 @@ class UsersController extends Controller
             'password' => ['nullable'],
             'owner' => ['required', 'boolean'],
             'photo' => ['nullable', 'image'],
+            'role'=>['required'],
         ]);
 
-        Auth::user()->account->users()->create([
+        $user=Auth::user()->account->users()->create([
             'first_name' => Request::get('first_name'),
             'last_name' => Request::get('last_name'),
             'email' => Request::get('email'),
@@ -57,11 +68,19 @@ class UsersController extends Controller
             'photo_path' => Request::file('photo') ? Request::file('photo')->store('users') : null,
         ]);
 
-        return Redirect::route('users')->with('success', 'User created.');
+        $user->assignRole(Request::get('role'));
+
+        return Redirect::route('users')->with('success', 'Usuario creado.');
     }
 
     public function edit(User $user)
     {
+        //dd($user->roles);
+        //solo puede editar el usuario con el mismo id
+        if (!($user->id === Auth::user()->id) && !(Auth::user()->hasRole('ADMINISTRADOR'))) {
+            abort(403,'Unauthorized Action');
+            # code...
+        }
         return Inertia::render('Users/Edit', [
             'user' => [
                 'id' => $user->id,
@@ -71,7 +90,11 @@ class UsersController extends Controller
                 'owner' => $user->owner,
                 'photo' => $user->photo_path ? URL::route('image', ['path' => $user->photo_path, 'w' => 60, 'h' => 60, 'fit' => 'crop']) : null,
                 'deleted_at' => $user->deleted_at,
-            ],
+                'roles' => $user->roles,
+            ],  
+            'roles'=>Role::orderBy('name')
+            ->get()
+            ->map->only('id','name'),
         ]);
     }
 
@@ -88,9 +111,16 @@ class UsersController extends Controller
             'password' => ['nullable'],
             'owner' => ['required', 'boolean'],
             'photo' => ['nullable', 'image'],
+            'role' => ['required'],
         ]);
 
         $user->update(Request::only('first_name', 'last_name', 'email', 'owner'));
+
+        //remove role firts
+        $user->removeRole(Request::get('role'));
+
+        //then assign role 
+        $user->assignRole(Request::get('role'));
 
         if (Request::file('photo')) {
             $user->update(['photo_path' => Request::file('photo')->store('users')]);
@@ -100,7 +130,7 @@ class UsersController extends Controller
             $user->update(['password' => Request::get('password')]);
         }
 
-        return Redirect::back()->with('success', 'User updated.');
+        return Redirect::back()->with('success', 'Usuario modificado.');
     }
 
     public function destroy(User $user)
@@ -111,13 +141,13 @@ class UsersController extends Controller
 
         $user->delete();
 
-        return Redirect::back()->with('success', 'User deleted.');
+        return Redirect::back()->with('success', 'Usuario eliminado.');
     }
 
     public function restore(User $user)
     {
         $user->restore();
 
-        return Redirect::back()->with('success', 'User restored.');
+        return Redirect::back()->with('success', 'Usuario restaurado.');
     }
 }

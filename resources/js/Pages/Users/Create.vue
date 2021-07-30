@@ -11,6 +11,14 @@
           <text-input v-model="form.last_name" :error="form.errors.last_name" class="pr-6 pb-8 w-full lg:w-1/2" label="Last name" />
           <text-input v-model="form.email" :error="form.errors.email" class="pr-6 pb-8 w-full lg:w-1/2" label="Email" />
           <text-input v-model="form.password" :error="form.errors.password" class="pr-6 pb-8 w-full lg:w-1/2" type="password" autocomplete="new-password" label="Password" />
+
+          <select-input v-if="$page.props.auth.user.roles[0]==='ADMINISTRADOR'"
+              v-model="form.role" :error="form.errors.role" 
+              class="pr-6 pb-8 w-full lg:w-1/2" label="Role">
+            <option :value="null"/>
+            <option v-for="xrole in roles" :key="xrole.id" :value="xrole.name">{{xrole.name}}</option>            
+          </select-input> 
+
           <select-input v-model="form.owner" :error="form.errors.owner" class="pr-6 pb-8 w-full lg:w-1/2" label="Owner">
             <option :value="true">Yes</option>
             <option :value="false">No</option>
@@ -18,7 +26,7 @@
           <file-input v-model="form.photo" :error="form.errors.photo" class="pr-6 pb-8 w-full lg:w-1/2" type="file" accept="image/*" label="Photo" />
         </div>
         <div class="px-8 py-4 bg-gray-50 border-t border-gray-100 flex justify-end items-center">
-          <loading-button :loading="form.processing" class="btn-indigo" type="submit">Create User</loading-button>
+          <loading-button :loading="form.processing" class="btn-indigo" type="submit">Crear Usuario</loading-button>
         </div>
       </form>
     </div>
@@ -42,6 +50,9 @@ export default {
   },
   layout: Layout,
   remember: 'form',
+  props:{
+    'roles':Array,
+  },
   data() {
     return {
       form: this.$inertia.form({
@@ -51,6 +62,7 @@ export default {
         password: null,
         owner: false,
         photo: null,
+        role:null,
       }),
     }
   },

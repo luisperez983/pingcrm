@@ -6,6 +6,12 @@
         <label class="block text-gray-700">Role:</label>
         <select v-model="form.role" class="mt-1 w-full form-select">
           <option :value="null" />
+          <option v-for="role in roles" :key="role.id" :value="role.name">{{role.name}}</option>
+        </select>
+        
+        <label class="block text-gray-700">Owner:</label>        
+        <select v-model="form.owner" class="mt-1 w-full form-select">
+          <option :value="null" />
           <option value="user">User</option>
           <option value="owner">Owner</option>
         </select>
@@ -26,7 +32,8 @@
         <tr class="text-left font-bold">
           <th class="px-6 pt-6 pb-4">Name</th>
           <th class="px-6 pt-6 pb-4">Email</th>
-          <th class="px-6 pt-6 pb-4" colspan="2">Role</th>
+          <th class="px-6 pt-6 pb-4">Role</th>
+          <th class="px-6 pt-6 pb-4" colspan="2">Owner</th>
         </tr>
         <tr v-for="user in users" :key="user.id" class="hover:bg-gray-100 focus-within:bg-gray-100">
           <td class="border-t">
@@ -41,6 +48,11 @@
               {{ user.email }}
             </inertia-link>
           </td>
+          <td class="border-t">
+            <inertia-link class="px-6 py-4 flex items-center" :href="route('users.edit', user.id)" tabindex="-1">
+              {{ user.role[0] }}
+            </inertia-link>
+          </td>          
           <td class="border-t">
             <inertia-link class="px-6 py-4 flex items-center" :href="route('users.edit', user.id)" tabindex="-1">
               {{ user.owner ? 'Owner' : 'User' }}
@@ -78,11 +90,13 @@ export default {
   props: {
     filters: Object,
     users: Array,
+    roles:Array
   },
   data() {
     return {
       form: {
         search: this.filters.search,
+        owner: this.filters.owner,
         role: this.filters.role,
         trashed: this.filters.trashed,
       },
