@@ -49,6 +49,7 @@ class HandleInertiaRequests extends Middleware
                             'id' => $request->user()->account->id,
                             'name' => $request->user()->account->name,
                         ],
+                        'organization' => $request->user()->organization ? $request->user()->organization->only('id','name') : '',
                         'roles'=>$request->user()->roles->pluck('name'),
                         'permissions'=>$request->user()->permissions->pluck('name'),
                     ] : null,

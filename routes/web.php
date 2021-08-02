@@ -117,25 +117,6 @@ Route::group([
     ->name('roles.destroy')
     ->middleware('auth');
 
-
-    });
-
-
-    //admin and user can edit and update
-    Route::group([
-        'middleware' => ['role:ADMINISTRADOR|USUARIO']],function(){
-    
-        Route::get('users/{user}/edit', [UsersController::class, 'edit'])
-            ->name('users.edit')
-            ->middleware('auth');
-
-        Route::put('users/{user}', [UsersController::class, 'update'])
-            ->name('users.update')
-            ->middleware('auth');
-
-    });
-
-
 // Organizations
 
 Route::get('organizations', [OrganizationsController::class, 'index'])
@@ -165,6 +146,26 @@ Route::delete('organizations/{organization}', [OrganizationsController::class, '
 Route::put('organizations/{organization}/restore', [OrganizationsController::class, 'restore'])
     ->name('organizations.restore')
     ->middleware('auth');
+
+    
+    });
+
+
+    //admin and user can edit and update
+    Route::group([
+        'middleware' => ['role:ADMINISTRADOR|USUARIO']],function(){
+    
+        Route::get('users/{user}/edit', [UsersController::class, 'edit'])
+            ->name('users.edit')
+            ->middleware('auth');
+
+        Route::put('users/{user}', [UsersController::class, 'update'])
+            ->name('users.update')
+            ->middleware('auth');
+
+    });
+
+
 
 // Contacts
 

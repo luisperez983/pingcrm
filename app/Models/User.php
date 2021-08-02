@@ -31,6 +31,7 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Account::class);
     }
+    
     public function organization()
     {
         return $this->belongsTo(Organization::class);
