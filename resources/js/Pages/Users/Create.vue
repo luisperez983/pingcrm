@@ -13,6 +13,13 @@
           <text-input v-model="form.password" :error="form.errors.password" class="pr-6 pb-8 w-full lg:w-1/2" type="password" autocomplete="new-password" label="Password" />
 
           <select-input v-if="$page.props.auth.user.roles[0]==='ADMINISTRADOR'"
+              v-model="form.organization_id" :error="form.errors.organization_id" 
+              class="pr-6 pb-8 w-full lg:w-1/2" label="Empresa">
+            <option :value="null"/>
+            <option v-for="xorganization in organizations" :key="xorganization.id" :value="xorganization.id">{{xorganization.name}}</option>            
+          </select-input> 
+          
+          <select-input v-if="$page.props.auth.user.roles[0]==='ADMINISTRADOR'"
               v-model="form.role" :error="form.errors.role" 
               class="pr-6 pb-8 w-full lg:w-1/2" label="Role">
             <option :value="null"/>
@@ -52,6 +59,7 @@ export default {
   remember: 'form',
   props:{
     'roles':Array,
+    'organizations':Array
   },
   data() {
     return {
@@ -62,6 +70,7 @@ export default {
         password: null,
         owner: false,
         photo: null,
+        organization_id:null,
         role:null,
       }),
     }

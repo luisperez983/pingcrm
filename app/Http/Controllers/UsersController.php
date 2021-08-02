@@ -3,25 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\URL;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use App\Models\Organization;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Redirect;
 
 class UsersController extends Controller
 {
+    
     public function index()
     {
         return Inertia::render('Users/Index', [
             'filters' => Request::all('search', 'owner','role', 'trashed'),
             'users' => Auth::user()->account->users()
                 ->orderByName()
-                ->filter(Request::only('search', 'owner','role', 'trashed'))
+                ->filter(Request::only('search', 'owner','role','organization', 'trashed'))
                 ->get()
                 ->transform(fn ($user) => [
                     'id' => $user->id,
@@ -30,11 +31,15 @@ class UsersController extends Controller
                     'owner' => $user->owner,
                     'photo' => $user->photo_path ? URL::route('image', ['path' => $user->photo_path, 'w' => 40, 'h' => 40, 'fit' => 'crop']) : null,
                     'deleted_at' => $user->deleted_at,
-                    'role'=>$user->getRoleNames(),
+                    'role'=>$user->getRoleNames(),                    
+                    'organization' => $user->organization ? $user->organization->only('name') : '',
                 ]),                
                 'roles'=>Role::orderBy('name')
                     ->get()
                     ->map->only('id','name'),
+                'organizations'=>Organization::orderBy('name')
+                ->get()
+                ->map->only('id','name'),
         ]);
     }
 
@@ -44,6 +49,9 @@ class UsersController extends Controller
             'roles'=>Role::orderBy('name')
             ->get()
             ->map->only('id','name'),
+            'organizations'=>Organization::orderBy('name')
+                ->get()
+                ->map->only('id','name'),
         ]);
     }
 
@@ -56,6 +64,7 @@ class UsersController extends Controller
             'password' => ['nullable'],
             'owner' => ['required', 'boolean'],
             'photo' => ['nullable', 'image'],
+            'organization_id' => ['required'],
             'role'=>['required'],
         ]);
 
@@ -65,6 +74,7 @@ class UsersController extends Controller
             'email' => Request::get('email'),
             'password' => Request::get('password'),
             'owner' => Request::get('owner'),
+            'organization_id' => Request::get('organization_id'),
             'photo_path' => Request::file('photo') ? Request::file('photo')->store('users') : null,
         ]);
 
@@ -90,11 +100,15 @@ class UsersController extends Controller
                 'owner' => $user->owner,
                 'photo' => $user->photo_path ? URL::route('image', ['path' => $user->photo_path, 'w' => 60, 'h' => 60, 'fit' => 'crop']) : null,
                 'deleted_at' => $user->deleted_at,
+                'organization_id' => $user->organization_id,
                 'roles' => $user->roles,
             ],  
             'roles'=>Role::orderBy('name')
             ->get()
             ->map->only('id','name'),
+            'organizations'=>Organization::orderBy('name')
+                ->get()
+                ->map->only('id','name'),
         ]);
     }
 
@@ -110,11 +124,13 @@ class UsersController extends Controller
             'email' => ['required', 'max:50', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => ['nullable'],
             'owner' => ['required', 'boolean'],
-            'photo' => ['nullable', 'image'],
+            'organization_id' => ['required'],
             'role' => ['required'],
+            'photo' => ['nullable', 'image'],
+            
         ]);
 
-        $user->update(Request::only('first_name', 'last_name', 'email', 'owner'));
+        $user->update(Request::only('first_name', 'last_name', 'email', 'owner','organization_id'));
 
         //remove role firts
         $user->removeRole(Request::get('role'));

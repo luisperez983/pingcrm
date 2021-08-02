@@ -8,6 +8,12 @@
           <option :value="null" />
           <option v-for="role in roles" :key="role.id" :value="role.name">{{role.name}}</option>
         </select>
+
+        <label class="block text-gray-700">Organización:</label>
+        <select v-model="form.organization" class="mt-1 w-full form-select">
+          <option :value="null" />
+          <option v-for="organization in organizations" :key="organization.id" :value="organization.id">{{organization.name}}</option>
+        </select>
         
         <label class="block text-gray-700">Owner:</label>        
         <select v-model="form.owner" class="mt-1 w-full form-select">
@@ -31,6 +37,7 @@
       <table class="w-full whitespace-nowrap">
         <tr class="text-left font-bold">
           <th class="px-6 pt-6 pb-4">Name</th>
+          <th class="px-6 pt-6 pb-4">Organización</th>
           <th class="px-6 pt-6 pb-4">Email</th>
           <th class="px-6 pt-6 pb-4">Role</th>
           <th class="px-6 pt-6 pb-4" colspan="2">Owner</th>
@@ -43,6 +50,11 @@
               <icon v-if="user.deleted_at" name="trash" class="flex-shrink-0 w-3 h-3 fill-gray-400 ml-2" />
             </inertia-link>
           </td>
+          <td class="border-t">
+            <inertia-link class="px-6 py-4 flex items-center" :href="route('users.edit', user.id)" tabindex="-1">
+              {{ user.organization.name }}
+            </inertia-link>
+          </td>          
           <td class="border-t">
             <inertia-link class="px-6 py-4 flex items-center" :href="route('users.edit', user.id)" tabindex="-1">
               {{ user.email }}
@@ -90,7 +102,8 @@ export default {
   props: {
     filters: Object,
     users: Array,
-    roles:Array
+    roles:Array,
+    organizations:Array
   },
   data() {
     return {
@@ -98,6 +111,7 @@ export default {
         search: this.filters.search,
         owner: this.filters.owner,
         role: this.filters.role,
+        organization: this.filters.organization,
         trashed: this.filters.trashed,
       },
     }

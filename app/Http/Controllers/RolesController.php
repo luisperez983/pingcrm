@@ -18,12 +18,13 @@ class RolesController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         return Inertia::render('Roles/Index',[
             'roles' => Role::OrderBy('id','ASC')
             ->get()
             ->transform(function($role){
+                
                 return[
                     'id'=>$role->id,
                     'name'=>$role->name,
@@ -34,6 +35,8 @@ class RolesController extends Controller
                 ];
             })
         ]);
+
+       
     }
 
     /**
@@ -43,7 +46,11 @@ class RolesController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Roles/Create',[
+            'unassignedPermissions' => Permission::all()
+            ->map->only('id','name'),
+            'assignedPermissions' => Array(),
+        ]);
     }
 
     /**
@@ -54,7 +61,27 @@ class RolesController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        //validate input
+        $request->validate(
+            [
+                'name' => ['required','max:50'],
+                'guard_name' => ['required','max:50']
+            ]
+        );
+
+        $role=Role::create(
+            [
+                'name' => $request->input('name'),
+                'guard_name' => $request->input('guard_name'),
+            ]
+            );
+        
+        $permissions = $request->input('0');
+
+        $role->syncPermissions($permissions);
+        
+        return Redirect::route('roles')->with('success', 'Role creado.');
+        
     }
 
     /**
@@ -74,9 +101,21 @@ class RolesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
-    {
-        //
+    public function edit(Role $role)
+    {        
+        return Inertia::render('Roles/Edit',[
+            'role'=>[
+                'id'=>$role->id,
+                'name'=>$role->name,
+                'guard_name'=>$role->guard_name,
+            ],
+            
+            'unassignedPermissions' => Permission::whereNotin('id', $role->permissions
+                                                                     ->map->only('id'))
+                                                    ->get()->map->only('id','name'),
+            
+            'assignedPermissions' => $role->permissions->map->only('id','name'),
+        ]);
     }
 
     /**
@@ -86,9 +125,22 @@ class RolesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $role)
     {
-        //
+        $request->validate(
+            [
+                'name' => ['required','max:50'],
+                'guard_name' => ['required','max:50']
+            ]
+        );
+
+        $permissions=$request->input('0');
+        $role=Role::find($role);
+        $role->name=$request->input('name');
+        $role->guard_name=$request->input('guard_name');
+        $role->save();
+        $role->syncPermissions($permissions);
+        return Redirect::route('roles')->with('success', 'Role modificado.');
     }
 
     /**
@@ -97,8 +149,10 @@ class RolesController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Role $role)
     {
-        //
+        $role->forceDelete();
+        return Redirect::route('roles')->with('success', 'Role Eliminado.');
+
     }
 }

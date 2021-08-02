@@ -1,13 +1,15 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RolesController;
+use App\Http\Controllers\UsersController;
+use App\Http\Controllers\ImagesController;
+use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\ContactsController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ImagesController;
+use App\Http\Controllers\PermissionsController;
 use App\Http\Controllers\OrganizationsController;
-use App\Http\Controllers\ReportsController;
-use App\Http\Controllers\UsersController;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,13 +59,64 @@ Route::group([
         ->name('users.store')
         ->middleware('auth');
 
-    Route::delete('users/{user}', [UsersController::class, 'destroy'])
+    Route::delete('users/{role}', [UsersController::class, 'destroy'])
         ->name('users.destroy')
         ->middleware('auth');
 
-    Route::put('users/{user}/restore', [UsersController::class, 'restore'])
+    Route::put('users/{role}/restore', [UsersController::class, 'restore'])
         ->name('users.restore')
         ->middleware('auth');
+
+        //Permissions
+        Route::get('permissions', [PermissionsController::class, 'index'])
+        ->name('permissions')
+        ->middleware('auth');
+
+        Route::get('permissions/create', [PermissionsController::class, 'create'])
+        ->name('permissions.create')
+        ->middleware('auth');
+
+        Route::get('permissions/{permission}/edit', [PermissionsController::class, 'edit'])
+        ->name('permissions.edit')
+        ->middleware('auth');
+
+        Route::post('permissions', [PermissionsController::class, 'store'])
+        ->name('permissions.store')
+        ->middleware('auth');
+
+        Route::post('permissions/{permission}/update', [PermissionsController::class, 'update'])
+        ->name('permissions.update')
+        ->middleware('auth');
+
+        Route::delete('permissions/{permission}', [PermissionsController::class, 'destroy'])
+        ->name('permissions.destroy')
+        ->middleware('auth');
+
+    // Roles
+    Route::get('roles', [RolesController::class, 'index'])
+    ->name('roles')
+    ->middleware('auth');
+
+    Route::get('roles/create', [RolesController::class, 'create'])
+    ->name('roles.create')
+    ->middleware('auth');
+    
+    Route::get('roles/{role}/edit', [RolesController::class, 'edit'])
+    ->name('roles.edit')
+    ->middleware('auth');    
+
+    Route::post('roles', [RolesController::class, 'store'])
+    ->name('roles.store')
+    ->middleware('auth');
+
+    Route::put('roles/{role}', [RolesController::class, 'update'])
+    ->name('roles.update')
+    ->middleware('auth');
+
+    Route::delete('roles/{role}', [RolesController::class, 'destroy'])
+    ->name('roles.destroy')
+    ->middleware('auth');
+
 
     });
 

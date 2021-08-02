@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use App\Models\Organization;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
@@ -30,6 +31,10 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Account::class);
     }
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
+    }    
 
     public function getNameAttribute()
     {
@@ -65,6 +70,11 @@ class User extends Authenticatable
             
     }
 
+    public function scopeWhereOrganization($query, $organization)
+    {
+        return $query->whereIn('id',User::organization($organization)->pluck('id'));            
+    }
+
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['search'] ?? null, function ($query, $search) {
@@ -76,7 +86,9 @@ class User extends Authenticatable
         })->when($filters['owner'] ?? null, function ($query, $owner) {
             $query->whereOwner($owner);
         })->when($filters['role'] ?? null, function ($query, $role) {
-            $query->whereRole($role);            
+            $query->whereRole($role); 
+        })->when($filters['organization'] ?? null, function ($query, $organization) {
+            $query->whereOrganization($organization);                        
         })->when($filters['trashed'] ?? null, function ($query, $trashed) {
             if ($trashed === 'with') {
                 $query->withTrashed();

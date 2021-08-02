@@ -18,7 +18,15 @@
           <text-input v-model="form.last_name" :error="form.errors.last_name" class="pr-6 pb-8 w-full lg:w-1/2" label="Last name" />
           <text-input v-model="form.email" :error="form.errors.email" class="pr-6 pb-8 w-full lg:w-1/2" label="Email" />
           <text-input v-model="form.password" :error="form.errors.password" class="pr-6 pb-8 w-full lg:w-1/2" type="password" autocomplete="new-password" label="Password" />
-          
+
+          <select-input v-if="$page.props.auth.user.roles[0]==='ADMINISTRADOR'"
+              v-model="form.organization_id" :error="form.errors.organization_id" 
+              ref="organization"
+              class="pr-6 pb-8 w-full lg:w-1/2" label="Empresa">
+            <option :value="null"/>
+            <option v-for="xorganization in organizations" :key="xorganization.id" :value="xorganization.id">{{xorganization.name}}</option>            
+          </select-input> 
+
           <select-input v-if="$page.props.auth.user.roles[0]==='ADMINISTRADOR'"
               v-model="form.role" :error="form.errors.role" 
               ref="role"
@@ -69,6 +77,7 @@ export default {
   props: {
     user: Object,
     roles:Array,
+    organizations:Array,
   },
   remember: 'form',
   data() {
@@ -80,6 +89,7 @@ export default {
         email: this.user.email, 
         password: null,
         owner: this.user.owner,
+        organization_id:this.user.organization_id,
         photo: null,
         role: this.user.roles[0].name,
       }),
@@ -97,6 +107,7 @@ export default {
           data.append('owner', this.form.owner ? '1' : '0')
           data.append('photo', this.form.photo || '')
           data.append('user',this.user.id)
+          data.append('organization_id',this.$refs.organization.value)
           data.append('role',this.$refs.role.value)
           data.append('_method', 'put') 
 
